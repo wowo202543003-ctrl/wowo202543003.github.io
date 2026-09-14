@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메이블의 작은 아뜰리에 🌷</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #f27289;
+      --primary-light: #ffe5ec;
+      --primary-deep: #d84a68;
+      --accent: #ff9fb2;
+      --bg-gradient: linear-gradient(135deg, #fff5f6 0%, #ffedf2 50%, #fdf8f5 100%);
+      --text-main: #3d2f34;
+      --text-muted: #856b74;
+      --card-bg: rgba(255, 255, 255, 0.78);
+      --card-border: rgba(255, 255, 255, 0.9);
+      --shadow-soft: 0 10px 30px rgba(242, 114, 137, 0.12);
+      --shadow-hover: 0 18px 40px rgba(242, 114, 137, 0.22);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text-main);
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      line-height: 1.6;
+    }
+
+    /* 배경 캔버스 (튤립 꽃잎 흩날리기) */
+    #petal-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 상단 컨트롤러 (꽃잎 토글, 하트 보내기) */
+    .top-controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .btn-toggle {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.25s ease;
+    }
+
+    .btn-toggle:hover {
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .btn-toggle.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* 히어로 프로필 섹션 */
+    .hero-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 50px 36px 40px;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(255,182,193,0.35) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+    }
+
+    .avatar-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffd3dc 0%, #fff0f3 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 54px;
+      box-shadow: 0 10px 24px rgba(242, 114, 137, 0.25);
+      border: 4px solid #fff;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .avatar-circle:hover {
+      transform: scale(1.1) rotate(6deg);
+    }
+
+    .avatar-badge {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      background: #fff;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      border: 2px solid var(--primary-light);
+    }
+
+    .hero-nickname {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-nickname span {
+      color: var(--primary);
+    }
+
+    .hero-tagline {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto 28px;
+      word-break: keep-all;
+    }
+
+    /* 키워드 뱃지 모음 */
+    .badge-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pill-badge {
+      background: #fff;
+      border: 1px solid #ffd4de;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(242, 114, 137, 0.08);
+      transition: all 0.2s ease;
+    }
+
+    .pill-badge i, .pill-badge .emoji {
+      font-size: 1.15rem;
+    }
+
+    .pill-badge:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(242, 114, 137, 0.16);
+    }
+
+    /* 메인 그리드 섹션 */
+    .grid-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .content-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .content-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary-light) 0%, #fff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: var(--primary);
+      box-shadow: 0 4px 12px rgba(242, 114, 137, 0.12);
+    }
+
+    .card-title-group h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .card-title-group p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .card-body {
+      font-size: 0.96rem;
+      color: var(--text-main);
+      flex-grow: 1;
+    }
+
+    /* 튤립 매니아 섹션 특화 */
+    .tulip-feature {
+      background: linear-gradient(135deg, rgba(255, 240, 243, 0.7) 0%, rgba(255, 255, 255, 0.9) 100%);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      border-left: 4px solid var(--primary);
+      margin-top: 14px;
+    }
+
+    .tulip-feature .quote {
+      font-family: 'Noto Serif KR', serif;
+      font-style: italic;
+      color: var(--primary-deep);
+      font-size: 0.94rem;
+      margin-bottom: 6px;
+    }
+
+    .tulip-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .mini-tag {
+      font-size: 0.82rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(242, 114, 137, 0.12);
+      color: var(--primary-deep);
+      font-weight: 500;
+    }
+
+    /* 영화 취미 섹션 특화 */
+    .movie-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .movie-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(242, 114, 137, 0.15);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .movie-item:hover {
+      background: #fff;
+      transform: translateX(4px);
+      border-color: var(--primary);
+    }
+
+    .movie-icon {
+      font-size: 1.2rem;
+    }
+
+    .movie-info {
+      flex: 1;
+    }
+
+    .movie-info strong {
+      display: block;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    .movie-info span {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* 인터랙티브 무비 추천기 */
+    .movie-picker-box {
+      margin-top: 18px;
+      padding: 14px;
+      background: #fff6f8;
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+
+    .movie-picker-box button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(242, 114, 137, 0.3);
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+
+    .movie-picker-box button:hover {
+      background: var(--primary-deep);
+      transform: scale(1.03);
+    }
+
+    #recommend-result {
+      margin-top: 10px;
+      font-weight: 600;
+      color: var(--primary-deep);
+      font-size: 0.92rem;
+      min-height: 22px;
+    }
+
+    /* 방명록 & 메시지 섹션 (전체 너비) */
+    .full-section {
+      margin-top: 28px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .guestbook-input-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 12px 18px;
+      border: 1.5px solid #ffccd7;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-submit {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0 24px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-submit:hover {
+      background: var(--primary-deep);
+      transform: translateY(-1px);
+    }
+
+    .guest-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .guest-card {
+      background: #fff;
+      border: 1px solid #ffe1e8;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      position: relative;
+      animation: popIn 0.3s ease-out;
+    }
+
+    .guest-card .time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* 푸터 */
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    footer span {
+      color: var(--primary);
+    }
+
+    /* 클릭 시 피어나는 하트/튤립 이펙트 */
+    .click-burst {
+      position: fixed;
+      font-size: 24px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: burstFloat 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      user-select: none;
+    }
+
+    @keyframes burstFloat {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.5) translateY(0);
+      }
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.3) translateY(-30px);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9) translateY(-70px);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* 반응형 레이아웃 */
+    @media (max-width: 680px) {
+      .container {
+        padding: 24px 16px 60px;
+      }
+      .grid-section {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+      .hero-card {
+        padding: 36px 20px 28px;
+      }
+      .hero-nickname {
+        font-size: 1.8rem;
+      }
+      .guestbook-input-row {
+        flex-direction: column;
+      }
+      .btn-submit {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 튤립 꽃잎 흩날림 캔버스 -->
+  <canvas id="petal-canvas"></canvas>
+
+  <div class="container">
+    <!-- 상단 컨트롤 버튼 -->
+    <div class="top-controls">
+      <button class="btn-toggle active" id="btn-petal-toggle" title="꽃잎 효과 켜기/끄기">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>튤립 꽃잎 효과</span>
+      </button>
+      <button class="btn-toggle" id="btn-sound-effect" title="효과음/반응">
+        <i class="fa-solid fa-heart"></i>
+        <span>하트 보내기</span>
+      </button>
+    </div>
+
+    <!-- 히어로 프로필 카드 -->
+    <section class="hero-card">
+      <div class="avatar-wrapper">
+        <div class="avatar-circle" id="profile-tulip" title="클릭해보세요!">
+          🌷
+        </div>
+        <div class="avatar-badge">🎬</div>
+      </div>
+
+      <h1 class="hero-nickname">안녕하세요, <span>메이블</span>입니다 🌷</h1>
+      <p class="hero-tagline">
+        향기로운 튤립과 스크린 너머의 따뜻한 감성을 사랑해요.<br>
+        영화 속 한 장면처럼 반짝이는 일상을 만들어가고 있습니다.
+      </p>
+
+      <!-- 뱃지 리스트 -->
+      <div class="badge-container">
+        <div class="pill-badge">
+          <span class="emoji">🏷️</span>
+          <span>닉네임: <strong>메이블 (Mabel)</strong></span>
+        </div>
+        <div class="pill-badge">
+          <span class="emoji">🌷</span>
+          <span>최애 이모지: <strong>튤립</strong></span>
+        </div>
+        <div class="pill-badge">
+          <span class="emoji">🎬</span>
+          <span>힐링 취미: <strong>영화 감상</strong></span>
+        </div>
+        <div class="pill-badge">
+          <span class="emoji">✨</span>
+          <span>일상 키워드: <strong>따스한 이야기 수집가</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2단 그리드 상세 소개 섹션 -->
+    <div class="grid-section">
+      <!-- 취미: 영화 감상 카드 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div class="card-icon">🎬</div>
+          <div class="card-title-group">
+            <h3>Cinema & Stories</h3>
+            <p>메이블이 가장 아끼는 취미, 영화 감상</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <p>
+            불을 끄고 마음에 드는 영화 한 편을 틀어놓는 시간은 저에게 가장 온전한 휴식이에요. 
+            엔딩 크레딧이 올라갈 때 남는 잔잔한 여운을 소중히 여깁니다.
+          </p>
+
+          <ul class="movie-list">
+            <li class="movie-item" onclick="showMovieToast('따스한 대화와 노을이 가득한 여정')">
+              <span class="movie-icon">🌅</span>
+              <div class="movie-info">
+                <strong>비포 선라이즈 (Before Sunrise)</strong>
+                <span>낭만과 대화가 머무는 유럽의 기차 여행</span>
+              </div>
+            </li>
+            <li class="movie-item" onclick="showMovieToast('시간을 건너도 닿는 다정한 마음')">
+              <span class="movie-icon">⏳</span>
+              <div class="movie-info">
+                <strong>어바웃 타임 (About Time)</strong>
+                <span>평범한 하루가 주는 최고의 선물</span>
+              </div>
+            </li>
+            <li class="movie-item" onclick="showMovieToast('색감과 음악이 춤추는 사랑과 꿈 이야기')">
+              <span class="movie-icon">🎹</span>
+              <div class="movie-info">
+                <strong>라라랜드 (La La Land)</strong>
+                <span>꿈을 좇는 모든 이들을 위한 감성 뮤지컬</span>
+              </div>
+            </li>
+          </ul>
+
+          <div class="movie-picker-box">
+            <div style="font-size:0.88rem; color:var(--text-muted);">
+              오늘 저녁 볼 영화를 고민 중이신가요?
+            </div>
+            <button onclick="pickRandomMovie()">메이블의 영화 뽑기 🍿</button>
+            <div id="recommend-result"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 좋아하는 것: 튤립 카드 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div class="card-icon">🌷</div>
+          <div class="card-title-group">
+            <h3>Tulip Bloom</h3>
+            <p>내가 가장 사랑하는 꽃, 튤립</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <p>
+            단아하면서도 고운 빛깔로 피어나는 튤립을 보면 마음이 절로 몽글몽글해져요. 
+            책상 옆 작은 화병에 분홍빛 튤립 한 송이를 꽂아두는 것만으로도 하루가 특별해집니다.
+          </p>
+
+          <div class="tulip-feature">
+            <div class="quote">"Tulips remind us that beauty begins gently."</div>
+            <p style="font-size:0.86rem; color:var(--text-muted);">
+              튤립의 꽃말은 <strong>'사랑의 고백', '영원한 애정'</strong>이에요. 
+              누군가에게 따스함을 전하고 싶을 때 가장 먼저 떠오르는 꽃이랍니다.
+            </p>
+          </div>
+
+          <div class="tulip-tags">
+            <span class="mini-tag">#핑크튤립 🌸</span>
+            <span class="mini-tag">#홈카페 & 꽃 ☕</span>
+            <span class="mini-tag">#봄날의온도 ☀️</span>
+            <span class="mini-tag">#꽃시장나들이 🌿</span>
+          </div>
+
+          <div style="margin-top: 24px; padding: 14px; background: rgba(255,255,255,0.7); border-radius: var(--radius-md); border: 1px dashed #f27289; text-align: center;">
+            <span style="font-size: 1.8rem; display: block; margin-bottom: 4px;">🌷✨</span>
+            <p style="font-size: 0.88rem; color: var(--text-main); font-weight: 500;">화면의 아무 곳이나 클릭해 보세요!</p>
+            <p style="font-size: 0.78rem; color: var(--text-muted);">예쁜 튤립과 하트 꽃잎이 피어납니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 방문자 응원 한마디 (로컬 스토리지 연동 방명록) -->
+    <section class="full-section">
+      <div class="section-title">
+        <span>💌</span> 메이블에게 남기는 따뜻한 한마디
+      </div>
+      <p class="section-desc">
+        놀러 와주셔서 감사해요! 메이블에게 인사나 영화 추천을 편하게 남겨주세요.
+      </p>
+
+      <form class="guestbook-input-row" id="guestbook-form" onsubmit="addMessage(event)">
+        <input 
+          type="text" 
+          id="guest-input" 
+          class="input-field" 
+          placeholder="예: 메이블님 반가워요! 저도 영화 보는 것 좋아해요 🌷" 
+          maxlength="80" 
+          required
+        >
+        <button type="submit" class="btn-submit">
+          <i class="fa-solid fa-paper-plane" style="margin-right: 4px;"></i> 남기기
+        </button>
+      </form>
+
+      <div class="guest-list" id="guest-list">
+        <!-- 동적으로 메시지가 추가됩니다 -->
+      </div>
+    </section>
+
+    <!-- 푸터 -->
+    <footer>
+      <p>Made with <span>🌷</span> & <span>🎬</span> for <strong>Mabel</strong></p>
+      <p style="font-size: 0.8rem; margin-top: 6px; opacity: 0.7;">© 2026 메이블의 작은 아뜰리에. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script>
+    /* ==========================================================
+       1. 화면 클릭 시 튤립 & 하트 버스트 이펙트
+       ========================================================== */
+    const burstIcons = ['🌷', '🌸', '✨', '🎬', '💖', '🍿'];
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('input')) return;
+      createBurst(e.clientX, e.clientY);
+    });
+
+    function createBurst(x, y) {
+      const el = document.createElement('div');
+      el.className = 'click-burst';
+      el.innerText = burstIcons[Math.floor(Math.random() * burstIcons.length)];
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      document.body.appendChild(el);
+
+      setTimeout(() => {
+        el.remove();
+      }, 900);
+    }
+
+    /* ==========================================================
+       2. 프로필 튤립 & 하트 버튼 인터랙션
+       ========================================================== */
+    const profileTulip = document.getElementById('profile-tulip');
+    profileTulip.addEventListener('click', (e) => {
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+          const rect = profileTulip.getBoundingClientRect();
+          const offsetX = (Math.random() - 0.5) * 80;
+          const offsetY = (Math.random() - 0.5) * 60;
+          createBurst(rect.left + rect.width / 2 + offsetX, rect.top + rect.height / 2 + offsetY);
+        }, i * 100);
+      }
+    });
+
+    const heartBtn = document.getElementById('btn-sound-effect');
+    heartBtn.addEventListener('click', (e) => {
+      const rect = heartBtn.getBoundingClientRect();
+      for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+          const offsetX = (Math.random() - 0.5) * 100;
+          const offsetY = (Math.random() - 0.5) * 40;
+          createBurst(rect.left + rect.width / 2 + offsetX, rect.top + offsetY);
+        }, i * 80);
+      }
+    });
+
+    /* ==========================================================
+       3. 튤립 꽃잎 흩날림 애니메이션 (HTML5 Canvas)
+       ========================================================== */
+    const canvas = document.getElementById('petal-canvas');
+    const ctx = canvas.getContext('2d');
+    let petals = [];
+    let animationFrameId = null;
+    let petalsActive = true;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Petal {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * -canvas.height;
+        this.size = Math.random() * 8 + 10;
+        this.speedY = Math.random() * 1.4 + 0.8;
+        this.speedX = Math.random() * 1 - 0.5;
+        this.angle = Math.random() * 360;
+        this.spin = (Math.random() - 0.5) * 1.5;
+        this.color = Math.random() > 0.4 ? 'rgba(255, 175, 190, 0.7)' : 'rgba(255, 205, 215, 0.6)';
+      }
+
+      update() {
+        this.y += this.speedY;
+        this.x += Math.sin(this.angle * Math.PI / 180) * 0.8 + this.speedX;
+        this.angle += this.spin;
+
+        if (this.y > canvas.height + 20) {
+          this.reset();
+          this.y = -10;
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.angle * Math.PI) / 180);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.size, this.size / 1.7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function initPetals() {
+      petals = [];
+      const count = Math.min(30, Math.floor(window.innerWidth / 35));
+      for (let i = 0; i < count; i++) {
+        const p = new Petal();
+        p.y = Math.random() * canvas.height;
+        petals.push(p);
+      }
+    }
+    initPetals();
+
+    function renderPetals() {
+      if (!petalsActive) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let petal of petals) {
+        petal.update();
+        petal.draw();
+      }
+      animationFrameId = requestAnimationFrame(renderPetals);
+    }
+    renderPetals();
+
+    // 꽃잎 토글 버튼
+    const petalToggleBtn = document.getElementById('btn-petal-toggle');
+    petalToggleBtn.addEventListener('click', () => {
+      petalsActive = !petalsActive;
+      if (petalsActive) {
+        petalToggleBtn.classList.add('active');
+        renderPetals();
+      } else {
+        petalToggleBtn.classList.remove('active');
+        cancelAnimationFrame(animationFrameId);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    });
+
+    /* ==========================================================
+       4. 영화 추천 랜덤 뽑기 & 토스트
+       ========================================================== */
+    const movieCandidates = [
+      "리틀 포레스트 🍃 (포근한 요리와 자연의 위로)",
+      "이터널 선샤인 ❄️ (기억을 지워도 다시 찾는 사랑)",
+      "마담 프루스트의 비밀정원 ☕ (슈게트와 함께하는 기억 여행)",
+      "카모메 식당 🍙 (핀란드 헬싱키의 소박하고 다정한 식당)",
+      "월-E (WALL-E) 🚀 (우주에서 가장 순수한 사랑 이야기)",
+      "그녀 (Her) 💌 (마음과 마음이 머무는 미래의 낭만)",
+      "인턴 (The Intern) 👔 (따스한 세대 간의 우정과 용기)"
+    ];
+
+    function pickRandomMovie() {
+      const resultEl = document.getElementById('recommend-result');
+      resultEl.innerText = "취향 저격 영화를 고르는 중...";
+      
+      let counter = 0;
+      const interval = setInterval(() => {
+        const randomItem = movieCandidates[Math.floor(Math.random() * movieCandidates.length)];
+        resultEl.innerText = randomItem;
+        counter++;
+        if (counter > 8) {
+          clearInterval(interval);
+          const finalItem = movieCandidates[Math.floor(Math.random() * movieCandidates.length)];
+          resultEl.innerHTML = `✨ 메이블 추천: <strong>${finalItem}</strong>`;
+        }
+      }, 70);
+    }
+
+    function showMovieToast(desc) {
+      alert(`🎬 메이블의 한 줄 코멘트:\n"${desc}"`);
+    }
+
+    /* ==========================================================
+       5. 방명록 (LocalStorage 영구 저장 기능)
+       ========================================================== */
+    const defaultMessages = [
+      { text: "메이블님 페이지 너무 따뜻하고 예뻐요! 🌷", time: "방금 전" },
+      { text: "튤립이랑 영화라니 취향이 정말 멋져요 🎬✨", time: "오늘" },
+      { text: "오늘 추천해주신 영화 보러 가야겠어요!", time: "어제" }
+    ];
+
+    function loadGuestMessages() {
+      const saved = localStorage.getItem('mabel_guestbook');
+      const messages = saved ? JSON.parse(saved) : defaultMessages;
+      const container = document.getElementById('guest-list');
+      container.innerHTML = '';
+
+      messages.forEach(msg => {
+        const card = document.createElement('div');
+        card.className = 'guest-card';
+        card.innerHTML = `
+          <div>${escapeHtml(msg.text)}</div>
+          <div class="time">🌷 ${msg.time}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function addMessage(event) {
+      event.preventDefault();
+      const input = document.getElementById('guest-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const saved = localStorage.getItem('mabel_guestbook');
+      const messages = saved ? JSON.parse(saved) : [...defaultMessages];
+      
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+      messages.unshift({
+        text: text,
+        time: `오늘 ${timeStr}`
+      });
+
+      localStorage.setItem('mabel_guestbook', JSON.stringify(messages));
+      input.value = '';
+      loadGuestMessages();
+
+      // 등록 축하 꽃가루
+      createBurst(window.innerWidth / 2, window.innerHeight / 2);
+    }
+
+    function escapeHtml(string) {
+      const div = document.createElement('div');
+      div.innerText = string;
+      return div.innerHTML;
+    }
+
+    // 초기 방명록 렌더링
+    loadGuestMessages();
+  </script>
+</body>
+</html>
